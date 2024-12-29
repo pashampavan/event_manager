@@ -53,7 +53,6 @@ const authenticateUser = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    console.log("err");
     res.status(401).json({ message: "Invalid or expired token" });
   }
 };
@@ -127,6 +126,91 @@ app.post("/tasks", authenticateUser, async (req, res) => {
     res.status(500).json({ message: "Failed to add task", error: error.message });
   }
 });
+
+
+
+
+
+
+// Task Statistics
+app.get("/tasks/statistics", authenticateUser, async (req, res) => {
+  const email = req.user.email;
+
+  try {
+    const tasks = await Task.find({ email });
+
+    if (tasks.length === 0) {
+      return res.status(200).json({ message: "No tasks found for this user", statistics: {} });
+    }
+
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter((task) => task.status === "Finished").length;
+    const pendingTasks = totalTasks - completedTasks;
+    const taskCompletionPercentage = ((completedTasks / totalTasks) * 100).toFixed(2);
+    const taskPendingPercentage = ((pendingTasks / totalTasks) * 100).toFixed(2);
+
+    const completedTaskTimes = tasks
+      .filter((task) => task.status === "Finished")
+      .map((task) => (new Date(task.end_time) - new Date(task.start_time)) / 3600000); // Time in hours
+    console.log(completedTaskTimes)
+    const averageTimePerCompletedTask =
+      completedTaskTimes.length > 0
+        ? (completedTaskTimes.reduce((sum, time) => sum + time, 0) / completedTaskTimes.length).toFixed(2)
+        : 0;
+
+    const pendingTaskTimes = tasks
+      .filter((task) => task.status === "Pending")
+      .map((task) => (Date.now() - new Date(task.start_time)) / 3600000); // Time lapsed in hours for pending tasks
+
+    const totalPendingTime = pendingTaskTimes.reduce((sum, time) => sum + time, 0).toFixed(2);
+
+    const estimatedCompletionTimes = tasks
+      .filter((task) => task.status === "Pending")
+      .map((task) => (new Date(task.end_time) - Date.now()) / 3600000); // Estimated time to finish in hours
+
+    const totalEstimatedCompletionTime = estimatedCompletionTimes.reduce((sum, time) => sum + Math.max(time, 0), 0).toFixed(2);
+
+    const prioritySummary = {};
+    tasks.forEach((task) => {
+      const priority = task.priority;
+      if (!prioritySummary[priority]) {
+        prioritySummary[priority] = {
+          pending: 0,
+          timeLapsed: 0,
+          timeToFinish: 0,
+        };
+      }
+      if (task.status === "Pending") {
+        prioritySummary[priority].pending += 1;
+        prioritySummary[priority].timeLapsed += (Date.now() - new Date(task.start_time)) / 3600000; // Time in hours
+        prioritySummary[priority].timeToFinish += Math.max(
+          (new Date(task.end_time) - Date.now()) / 3600000,
+          0
+        ); // Time in hours
+      }
+    });
+
+    res.status(200).json({
+      statistics: {
+        totalTasks,
+        completedTasks,
+        pendingTasks,
+        taskCompletionPercentage,
+        taskPendingPercentage,
+        averageTimePerCompletedTask,
+        totalPendingTime,
+        totalEstimatedCompletionTime,
+        prioritySummary,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch task statistics", error: error.message });
+  }
+});
+
+
+
+
 
 // Get Tasks
 app.get("/tasks", authenticateUser, async (req, res) => {
