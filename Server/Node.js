@@ -48,8 +48,9 @@ if (!isPasswordValid) {
 
   // Generate JWT token
   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: "1h",
+    expiresIn: "15m",
   });
+  
 
   res.json({ token });
 });
