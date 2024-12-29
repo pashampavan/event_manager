@@ -3,10 +3,24 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
+const mongoose = require('mongoose');
+const db = 'mongodb+srv://pashampavan:Pavan02@cluster0.bizzz4b.mongodb.net/mini?retryWrites=true&w=majority';
+mongoose.connect(db).then(() => {
+  console.log("connected")
+}).catch((err) => {
+  console.log("erroe occured")
+});
+var KittySchema = new mongoose.Schema({
+  email: {type:String,require:true},
+  name:{type:String,require:true},
+  password: {type:String,require:true},
+  tasks: {type:Number,require:true},
+})
+var Kitten = mongoose.model('users', KittySchema);
+
 
 // Sample user data (normally stored in a database)
 const users = [
@@ -26,33 +40,69 @@ app.get("/", async (req, res) => {
     res.json({"jj":"knk"});
 }
 )
-app.post("/login", async (req, res) => {
-    const { email, password } = req.body;
-    // console.log(email);
-    // console.log(password);
-    // Find user by email
-    const user = users.find((u) => u.email === email);
-    // console.log(user.email);
-    // console.log(user.password);
-  if (!user) {
-    console.log("user error");
-    return res.status(401).json({ message: "Invalid email or password" });
-}
 
-// Compare passwords
-const isPasswordValid = await bcrypt.compare(password, user.password);
-console.log(isPasswordValid);
-if (!isPasswordValid) {
-    return res.status(401).json({ message: "Invalid email or password" });
+app.post('/register', async (req, res) => {
+  const { email, name, password} = req.body;
+
+  // Validate input
+  if (!email || !name || !password) {
+    return res.status(400).json({ error: 'All fields are required.' });
   }
 
-  // Generate JWT token
-  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-    expiresIn: "15m",
-  });
-  
+  try {
+    // Save to database
+    let tasks=0;
+    const newUser = new Kitten({ email, name, password, tasks });
+    await newUser.save();
+    res.status(201).json({ message: 'User registered successfully.', user: newUser });
+  } catch (error) {
+    console.error('Error saving user:', error.message);
+    res.status(500).json({ error: 'Failed to save user.' });
+  }
+});
 
-  res.json({ token });
+
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validate input
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
+  }
+
+  try {
+    // Find user by email
+    const user = await Kitten.findOne({ email });
+
+    // Check if user exists
+    if (!user) {
+      console.log('User not found');
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    // Verify password
+    if (user.password !== password) {
+      console.log('Incorrect password');
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    // Authentication successful
+    // res.status(200).json({ message: 'Login successful.', user: { email: user.email, name: user.name } });
+    // Generate JWT token
+    // const isPasswordValid = await bcrypt.compare(password, user.password);
+      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+        expiresIn: "15m",
+      });
+      
+    
+      res.json({ token });
+  } catch (error) {
+    console.error('Error during login:', error.message);
+    res.status(500).json({ message: 'An error occurred during login.' });
+  }
+
+
 });
 
 // Protected route
