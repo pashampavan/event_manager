@@ -152,11 +152,14 @@ app.get("/tasks/statistics", authenticateUser, async (req, res) => {
     const completedTaskTimes = tasks
       .filter((task) => task.status === "Finished")
       .map((task) => (new Date(task.end_time) - new Date(task.start_time)) / 3600000); // Time in hours
-    console.log(completedTaskTimes)
-    const averageTimePerCompletedTask =
-      completedTaskTimes.length > 0
-        ? (completedTaskTimes.reduce((sum, time) => sum + time, 0) / completedTaskTimes.length).toFixed(2)
-        : 0;
+    const averageTimePerCompletedTask = completedTaskTimes.length > 0
+    ? (
+        completedTaskTimes
+          .filter((time) => time > 0) // Ensure only positive times are included
+          .reduce((sum, time) => sum + time, 0) / completedTaskTimes.length
+      ).toFixed(2)
+    : 0;
+  
 
     const pendingTaskTimes = tasks
       .filter((task) => task.status === "Pending")
