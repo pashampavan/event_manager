@@ -285,10 +285,10 @@ app.get('/',(req,res)=>{
 
 
 // Server
-const PORT = 5000;
-app.listen(PORT,'0.0.0.0', () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+// const PORT = 5000;
+// app.listen(PORT,'0.0.0.0', () => {
+//   console.log(`Server running at http://localhost:${PORT}`);
+// });
 
-// module.exports = app;
+module.exports = app;
 
