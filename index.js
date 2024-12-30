@@ -9,7 +9,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const db = process.env.db;
+const db =process.env.db;
 const JWT_SECRET = process.env.JWT_SECRET;
 mongoose
   .connect(db)
