@@ -268,8 +268,11 @@ app.delete("/tasks/:id", authenticateUser, async (req, res) => {
   }
 });
 
+app.get('/',(req,res)=>{
+  res.status(200).json({status:"success"});
+})
 // Server
 const PORT = 5000;
-app.listen(PORT, () => {
+app.listen(PORT,'0.0.0.0', () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

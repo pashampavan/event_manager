@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database-app-deployment
+  labels:
+    app: database-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: database-app
+  template:
+    metadata:
+      labels:
+        app: database-app
+    spec:
+      containers:
+      - name: database-app
+        image: <pashampavan>/database-app:latest
+        ports:
+        - containerPort: 5000
