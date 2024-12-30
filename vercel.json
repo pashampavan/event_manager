@@ -1,16 +1,19 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "api/index.js",
-        "use": "@vercel/node"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/api/index.js"
-      }
-    ]
+    "scripts": {
+      "start": "node api/index.js"
+    },
+    "dependencies": {
+      "@vercel/node": "^2.0.0",
+      "bcryptjs": "^2.4.3",
+      "body-parser": "^1.20.3",
+      "cors": "^2.8.5",
+      "express": "^4.21.2",
+      "jsonwebtoken": "^9.0.2",
+      "mongoose": "^8.9.2",
+      "pg": "^8.13.1"
+    },
+    "devDependencies": {
+      "nodemon": "^3.1.9"
+    }
   }
   

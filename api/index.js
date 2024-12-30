@@ -4,12 +4,13 @@ const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
-
+require('dotenv').config();
 const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
-const db = "mongodb+srv://pashampavan:Pavan02@cluster0.bizzz4b.mongodb.net/mini?retryWrites=true&w=majority";
+const db = process.env.db;
+const JWT_SECRET = process.env.JWT_SECRET;
 mongoose
   .connect(db)
   .then(() => {
@@ -19,6 +20,13 @@ mongoose
     console.log("Database connection error:", err);
   });
 
+
+  app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: "Internal Server Error" });
+  });
+
+  
 // User Schema
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true },
@@ -27,6 +35,8 @@ const UserSchema = new mongoose.Schema({
   tasks: { type: Number, default: 0 },
 });
 const User = mongoose.model("users", UserSchema);
+
+
 
 // Task Schema
 const TaskSchema = new mongoose.Schema({
@@ -40,7 +50,6 @@ const TaskSchema = new mongoose.Schema({
 });
 const Task = mongoose.model("tasks", TaskSchema);
 
-const JWT_SECRET = "83e5d456bf3dddc7f6e13d2a05e295e2844d52b196324e93cb72f76d8c7d12d0dbe8438ab91a67d1b8c95b15643bde3c";
 
 // User Authentication Middleware
 const authenticateUser = (req, res, next) => {
@@ -271,9 +280,15 @@ app.delete("/tasks/:id", authenticateUser, async (req, res) => {
 app.get('/',(req,res)=>{
   res.status(200).json({status:"success"});
 })
+
+
+
+
 // Server
 // const PORT = 5000;
 // app.listen(PORT,'0.0.0.0', () => {
 //   console.log(`Server running at http://localhost:${PORT}`);
 // });
-module.exports.app;
+
+module.exports = app;
+
