@@ -52,6 +52,56 @@ const TaskSchema = new mongoose.Schema({
 const Task = mongoose.model("tasks", TaskSchema);
 
 
+
+//Attendee services 
+const attendeeSchema = new mongoose.Schema({
+  task_id:String,
+  name: String,
+  email: String,
+  mobile: String,
+});
+
+const Attendee = mongoose.model("Attendee", attendeeSchema);
+
+
+// Controller for fetching tasks by event ID
+app.get("/tasks/:eventId", async (req, res) => {
+  const { eventId } = req.params;
+  try {
+    const tasks = await Task.find({ event_id: eventId });
+    res.json(tasks);
+  } catch (error) {
+    res.status(500).send("Error fetching tasks for event.");
+  }
+});
+
+
+
+app.get("/tasks/:task_id/attendees", async (req, res) => {
+  const { task_id } = req.params;
+  const attendees = await Attendee.find({ task_id });
+  res.json(attendees);
+});
+
+app.post("/tasks/:task_id/attendees", async (req, res) => {
+  const { task_id } = req.params;
+  const attendee = new Attendee({ ...req.body, task_id });
+  await attendee.save();
+  res.status(201).json(attendee);
+});
+
+app.put("/tasks/:task_id/attendees/:id", async (req, res) => {
+  const { id } = req.params;
+  const attendee = await Attendee.findByIdAndUpdate(id, req.body, { new: true });
+  res.json(attendee);
+});
+
+app.delete("/tasks/:task_id/attendees/:id", async (req, res) => {
+  const { id } = req.params;
+  await Attendee.findByIdAndDelete(id);
+  res.status(204).send();
+});
+
 // User Authentication Middleware
 const authenticateUser = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -231,8 +281,9 @@ app.get("/tasks/statistics", authenticateUser, async (req, res) => {
 // Get Tasks
 app.get("/tasks", authenticateUser, async (req, res) => {
   const email = req.user.email;
+  const { event_id } = req.query
   try {
-    const tasks = await Task.find({ email });
+    const tasks = await Task.find({ event_id });
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch tasks", error: error.message });
