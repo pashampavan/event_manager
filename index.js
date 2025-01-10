@@ -40,6 +40,7 @@ const User = mongoose.model("users", UserSchema);
 
 // Task Schema
 const TaskSchema = new mongoose.Schema({
+  event_id: { type: String, required: true },
   email: { type: String, required: true },
   title: { type: String, required: true },
   priority: { type: Number, required: true, min: 1, max: 5 },
@@ -112,7 +113,9 @@ app.post("/login", async (req, res) => {
 
 // Add Task
 app.post("/tasks", authenticateUser, async (req, res) => {
-  const { title, priority, status, start, end } = req.body;
+  const { event_id,title, priority, status, start, end } = req.body;
+  console.log(event_id);
+  console.log("yes");
   const email = req.user.email;
   const startTime = new Date(start);
   const endTime = new Date(end);
@@ -121,6 +124,7 @@ app.post("/tasks", authenticateUser, async (req, res) => {
   }
   try {
     const newTask = new Task({
+      event_id,
       email,
       title,
       priority,
@@ -238,7 +242,7 @@ app.get("/tasks", authenticateUser, async (req, res) => {
 // Update Task
 app.put("/tasks/:id", authenticateUser, async (req, res) => {
   const {id} = req.params;
-  const { title, priority, status, start, end} = req.body;
+  const { event_id,title, priority, status, start, end} = req.body;
   const email = req.user.email;
   const startTime = new Date(start);
   const endTime = new Date(end);
@@ -285,10 +289,10 @@ app.get('/',(req,res)=>{
 
 
 // Server
-// const PORT = 5000;
-// app.listen(PORT,'0.0.0.0', () => {
-//   console.log(`Server running at http://localhost:${PORT}`);
-// });
+const PORT = 5000;
+app.listen(PORT,'0.0.0.0', () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
 
-module.exports = app;
+// module.exports = app;
 
