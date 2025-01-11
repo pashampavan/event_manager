@@ -277,6 +277,34 @@ app.get("/tasks/statistics", authenticateUser, async (req, res) => {
 
 
 
+// Endpoint to fetch tasks assigned to a specific user for a given event
+app.get('/tasksassigned/:event_id', authenticateUser, async (req, res) => {
+  
+  const event_id = req.params.event_id;
+  const email = req.user.email;
+  if (!event_id) {
+    return res.status(400).json({ message: 'Event ID is required' });
+  }
+
+  try {
+    // Fetch tasks assigned to the specified user for the given event
+    const assigned_tasks = await Attendee.find({ email: email });
+
+
+    const taskIds = assigned_tasks
+      .filter(item => item.task_id) // Filter items that have a task_id
+      .map(item => item.task_id);
+
+    const tasks = await Task.find({ _id: { $in: taskIds }, event_id: event_id });
+
+
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ message: 'Server error while fetching tasks' });
+  }
+});
+
 
 // Get Tasks
 app.get("/tasks", authenticateUser, async (req, res) => {
@@ -284,6 +312,7 @@ app.get("/tasks", authenticateUser, async (req, res) => {
   const { event_id } = req.query
   try {
     const tasks = await Task.find({ event_id });
+    
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch tasks", error: error.message });
